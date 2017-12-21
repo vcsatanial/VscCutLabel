@@ -13,6 +13,7 @@
 static char kAllText;
 static char kClickBlock;
 static char kDetailStr;
+static char kLastLineStr;
 NSString *const kTokenString = @"\u2026";
 
 @implementation UILabel (CutLabel)
@@ -34,14 +35,28 @@ NSString *const kTokenString = @"\u2026";
 -(void)setDetailStr:(NSString *)detailStr{
 	objc_setAssociatedObject(self, &kDetailStr, detailStr, OBJC_ASSOCIATION_COPY_NONATOMIC);
 }
+-(NSString *)lastLineStr{
+	return objc_getAssociatedObject(self, &kLastLineStr);
+}
+-(void)setLastLineStr:(NSString *)lastLineStr{
+	objc_setAssociatedObject(self, &kLastLineStr, lastLineStr, OBJC_ASSOCIATION_COPY_NONATOMIC);
+}
 -(NSString *)adjustText{
 	return [self allText];
 }
 -(void)setAdjustText:(NSString *)adjustText{
 	self.text = adjustText;
-	[self sizeToFit];
+	CGFloat fitHeight = [self calHeightWithStr:adjustText];
+	CGFloat numLineHeight = self.numberOfLines == 0 ? MAXFLOAT : self.numberOfLines * self.font.lineHeight;
+	CGFloat realHeight = MIN(fitHeight, numLineHeight);
+	CGRect frame = self.frame;
+	frame.size.height = realHeight;
+	self.frame = frame;
 }
 -(CutLabelModel *)lastLineModel:(NSString *)text{
+	if (!text) {
+		return nil;
+	}
 	NSMutableAttributedString *attributed = [[NSMutableAttributedString alloc] initWithString:text attributes:@{NSFontAttributeName:self.font}];
 	CGMutablePathRef path = CGPathCreateMutable();
 	CGPathAddRect(path, NULL, CGRectMake(0, 0, CGRectGetWidth(self.bounds), MAXFLOAT));
@@ -72,25 +87,36 @@ NSString *const kTokenString = @"\u2026";
 	self.userInteractionEnabled = YES;
 	NSUInteger lastLineLength = model.lastLineRange.length;
 	int length = 0;
-	CGFloat detailWidth = [self widthWithStr:detailStr];
-	CGFloat dotWidth = [self widthWithStr:kTokenString];
-	while ([self widthWithStr:[model.lastLineStr substringToIndex:lastLineLength - length]] + dotWidth + detailWidth + 4 > self.frame.size.width) {
+	CGFloat detailWidth = [self calWidthWithStr:detailStr];
+	CGFloat dotWidth = [self calWidthWithStr:kTokenString];
+	while ([self calWidthWithStr:[model.lastLineStr substringToIndex:lastLineLength - length]] + dotWidth + detailWidth + 4 > self.frame.size.width) {
 		length++;
 	}
 	NSString *subStr = [self.text substringToIndex:model.lastLineRange.location + model.lastLineRange.length - length];
 	NSString *addDotStr = [subStr stringByAppendingString:kTokenString];
+	
+	NSString *lastLine = [self.text substringWithRange:NSMakeRange(model.lastLineRange.location, model.lastLineRange.length - length)];
+	[self setLastLineStr:lastLine];
+	
 	self.text = addDotStr;
 	NSAttributedString *detailAtt = [[NSAttributedString alloc] initWithString:detailStr attributes:@{NSForegroundColorAttributeName:color,NSFontAttributeName:self.font}];
 	NSMutableAttributedString *attAddStr = self.attributedText.mutableCopy;
 	[attAddStr appendAttributedString:detailAtt];
 	self.attributedText = attAddStr.copy;
 }
--(CGFloat)widthWithStr:(NSString *)str{
+-(CGFloat)calWidthWithStr:(NSString *)str{
 	CGSize size = [str boundingRectWithSize:CGSizeMake(MAXFLOAT, self.frame.size.height)
 									options:NSStringDrawingUsesLineFragmentOrigin
 								 attributes:@{NSFontAttributeName : self.font}
 									context:NULL].size;
 	return size.width;
+}
+-(CGFloat)calHeightWithStr:(NSString *)str{
+	CGSize size = [str boundingRectWithSize:CGSizeMake(self.frame.size.width, MAXFLOAT)
+									options:NSStringDrawingUsesLineFragmentOrigin
+								 attributes:@{NSFontAttributeName : self.font}
+									context:NULL].size;
+	return size.height;
 }
 -(void)showAllText{
 	self.text = [self allText];
@@ -106,8 +132,10 @@ NSString *const kTokenString = @"\u2026";
 	}
 	CGFloat lineHeight = self.font.lineHeight;
 	NSInteger count = self.numberOfLines - 1;
-	CGFloat detailWidth = [self widthWithStr:[self detailStr]] + 8;
-	CGRect rect = CGRectMake(self.frame.size.width - detailWidth, count * lineHeight, detailWidth, lineHeight);
+	CGFloat detailWidth = [self calWidthWithStr:[self detailStr]] + 15;
+	NSString *lineStr = [self lastLineStr];
+	CGFloat detailX = [self calWidthWithStr:lineStr];
+	CGRect rect = CGRectMake(detailX, count * lineHeight - 5, detailWidth, lineHeight + 5);
 	if (CGRectContainsPoint(rect, point)) {
 		__weak UILabel *wl = self;
 		self.clickBlock([self allText],wl);
@@ -116,3 +144,4 @@ NSString *const kTokenString = @"\u2026";
 @end
 @implementation CutLabelModel
 @end
+
