@@ -20,10 +20,10 @@ Pod::Spec.new do |s|
   s.ios.deployment_target = '7.0'
   s.version          = '1.0.0'
   s.homepage         = 'https://github.com/vcsatanial/VscCutLabel'
-  spec.license          = { :type => 'MIT', :file => 'LICENSE' }
-  spec.author           = { 'VincentSatanial' => '116359398@qq.com' }
-  spec.source           = { :git => 'https://github.com/vcsatanial/VscCutLabel.git', :tag => spec.version }
+  s.license          = { :type => 'MIT', :file => 'LICENSE' }
+  s.author           = { 'VincentSatanial' => '116359398@qq.com' }
+  s.source           = { :git => 'https://github.com/vcsatanial/VscCutLabel.git', :tag => s.version }
   
-  spec.source_files = 'VscCutLabel/*.{h,m}'
-  spec.requires_arc = true
+  s.source_files = 'VscCutLabel/*.{h,m}'
+  s.requires_arc = true
 end
