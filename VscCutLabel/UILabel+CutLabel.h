@@ -11,9 +11,10 @@
 @interface UILabel (CutLabel) <UIGestureRecognizerDelegate>
 
 /**
- 实用此属性,可以直接自适应高度
+ 使用此属性,可以直接自适应高度
  */
 @property (nonatomic,copy) NSString *adjustText;
+
 /**
  通过计算字符串,获取最后一行的字符串,Range,以及最后一行之前所有的字符串总和
 
