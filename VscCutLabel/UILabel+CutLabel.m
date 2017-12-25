@@ -121,7 +121,10 @@ NSString *const kTokenString = @"\u2026";
 -(void)showAllText{
 	self.text = [self allText];
 	self.numberOfLines = 0;
-	[self sizeToFit];
+	CGFloat height = [self calHeightWithStr:self.text];
+	CGRect frame = self.frame;
+	frame.size.height = height;
+	self.frame = frame;
 }
 -(void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event{
 	UITouch *touch = [touches anyObject];
